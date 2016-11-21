@@ -58,6 +58,7 @@ class FinalAlgView: UIView {
     }
     
     func initHelper() {
+        isOpaque = false
         let tap = UITapGestureRecognizer(target: self, action: #selector(eraseDrawing))
         tap.numberOfTapsRequired = 3
         addGestureRecognizer(tap)
@@ -135,7 +136,6 @@ class FinalAlgView: UIView {
         pts[0] = touch.location(in: self)
         isFirstTouchPoint = true
         subPath = [UIBezierPath]()
-        
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -158,12 +158,20 @@ class FinalAlgView: UIView {
                 
                 offsetPath.lineWidth = CGFloat(self.lineWidth)
                 var ls = [LineSegment](repeatElement(LineSegment(firstPoint: CGPoint.zero, secondPoint: CGPoint.zero), count: 4))
+                //var ls = [LineSegment]()
                 
-                for i in 0 ..< self.bufIdx {
+                for i in sequence(first: 0, next: { $0 + 4 < self.bufIdx ? $0 + 4 : nil }) {
+                    
                     if self.isFirstTouchPoint {
+                        
                         ls[0] = LineSegment(firstPoint: self.pointsBuffer[0], secondPoint: self.pointsBuffer[0])
+                        offsetPath.move(to: ls[0].firstPoint)
+                        self.isFirstTouchPoint = false
+                        
+                        
                     } else {
                         ls[0] = self.lastSegmentOfPrev
+                        //print(ls[0])
                     }
                     
                     let frac1: CGFloat = self.lineEffect/self.clamp(value: self.len_sq(p1: self.pointsBuffer[i], p2: self.pointsBuffer[i+1]), lower: LOWER, higher: UPPER)
@@ -187,6 +195,7 @@ class FinalAlgView: UIView {
                     offsetPath.close()
                     
                     self.lastSegmentOfPrev = ls[3]
+
                     
                 }
                 //store path for undo
